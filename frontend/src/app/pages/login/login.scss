@@ -1,0 +1,67 @@
+@use 'mixins' as *;
+
+.login-shell {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: var(--ui-space-4);
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      var(--ui-glow),
+      transparent 60%
+    ),
+    var(--ui-page);
+}
+
+.login-form {
+  @include gradient-hairline;
+  animation: page-in 320ms ease-out both;
+  display: grid;
+  gap: var(--ui-space-4);
+  width: min(100%, 400px);
+  padding: var(--ui-space-6);
+  border-radius: var(--ui-radius-lg);
+  box-shadow: var(--ui-shadow-md);
+
+  @include below(compact) {
+    padding: var(--ui-space-5);
+  }
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-3);
+}
+
+.logo {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-accent);
+  color: var(--ui-on-accent);
+  font-size: var(--ui-text-lg);
+  font-weight: 600;
+}
+
+.wordmark {
+  font-size: var(--ui-text-lg);
+  font-weight: 600;
+}
+
+.heading {
+  display: grid;
+  gap: var(--ui-space-1);
+  margin-bottom: var(--ui-space-2);
+}
+
+.lang-toggle {
+  margin-inline-start: auto;
+}
+
+.submit {
+  margin-top: var(--ui-space-2);
+}

@@ -1,0 +1,189 @@
+@if (loadProblem(); as problem) {
+  <app-page-intro [eyebrow]="t('order.eyebrow')" [title]="t('order.title')" />
+  <section class="card empty-state">
+    <p>{{ t(problem) }}</p>
+    <div class="row">
+      <a class="button" routerLink="/agent">{{ t('order.backToCustomers') }}</a>
+      <button type="button" (click)="load()">{{ t('common.retry') }}</button>
+    </div>
+  </section>
+} @else if (loading()) {
+  <app-page-intro [eyebrow]="t('order.eyebrow')" [title]="t('order.title')" />
+  <app-skeleton [rows]="4" cards />
+} @else {
+  @switch (view()) {
+    <!-- ---------- 1. Choose products ---------- -->
+    @case ('pick') {
+      <a class="back" routerLink="/agent"><app-icon name="back" [size]="18" /> {{ t('order.backToCustomers') }}</a>
+      <app-page-intro
+        [eyebrow]="t('order.eyebrow')"
+        [title]="customer()?.name ?? t('order.title')"
+        [description]="customer()?.address ?? ''"
+      />
+
+      <input
+        type="search"
+        class="search"
+        [ngModel]="query()"
+        (ngModelChange)="query.set($event)"
+        [placeholder]="t('order.searchProducts')"
+        [attr.aria-label]="t('order.searchProducts')"
+      />
+
+      <ul class="products stagger">
+        @for (product of visibleProducts(); track product.id) {
+          <li class="product" [class.chosen]="quantityOf(product) > 0">
+            <div class="info">
+              <strong>{{ product.name }}</strong>
+              <span class="meta">
+                <span class="code">{{ product.code }}</span>
+                @if (product.stock > 0) {
+                  <span class="badge success">{{ t('order.stock', { count: i18n.quantity(product.stock) }) }}</span>
+                } @else {
+                  <span class="badge warning">{{ t('products.outOfStock') }}</span>
+                }
+              </span>
+              <span class="price">
+                @if (product.offerPercent) {
+                  <s>{{ i18n.money(product.price) }}</s>
+                  <b>{{ i18n.money(fromCents(lineTotalCentsFor(product))) }}</b>
+                  <span class="badge warning">−{{ i18n.quantity(product.offerPercent) }}% · {{ product.offerName }}</span>
+                } @else {
+                  <b>{{ i18n.money(product.price) }}</b>
+                }
+              </span>
+              @if (quantityOf(product) > product.stock) {
+                <small class="over">{{ t('order.overStock', { count: i18n.quantity(product.stock) }) }}</small>
+              }
+            </div>
+
+            <div class="stepper">
+              <button
+                type="button"
+                (click)="step(product, -1)"
+                [disabled]="quantityOf(product) === 0"
+                [attr.aria-label]="t('order.less')"
+              >
+                −
+              </button>
+              <input
+                type="number"
+                inputmode="numeric"
+                min="0"
+                [ngModel]="quantityOf(product) || null"
+                (ngModelChange)="setQuantity(product, $event)"
+                placeholder="0"
+                [attr.aria-label]="t('order.quantity') + ': ' + product.name"
+              />
+              <button type="button" (click)="step(product, 1)" [attr.aria-label]="t('order.more')">+</button>
+            </div>
+          </li>
+        } @empty {
+          <li class="card empty-state">{{ t('common.noResults') }}</li>
+        }
+      </ul>
+
+      <div class="summary-bar">
+        <div>
+          <small>{{ t('order.items', { count: totals().items }) }}</small>
+          <strong [appCountUp]="totals().total" format="money" [duration]="300"></strong>
+        </div>
+        <button type="button" class="primary" (click)="review()" [disabled]="!lines().length">
+          {{ t('order.review') }}
+        </button>
+      </div>
+    }
+
+    <!-- ---------- 2. Check the calculation and send ---------- -->
+    @case ('review') {
+      <button type="button" class="back text-button" (click)="backToPick()" [disabled]="sending()">
+        <app-icon name="back" [size]="18" /> {{ t('order.backToProducts') }}
+      </button>
+      <app-page-intro
+        [eyebrow]="t('order.reviewEyebrow')"
+        [title]="customer()?.name ?? t('order.title')"
+        [description]="t('order.reviewIntro')"
+      />
+
+      <section class="card">
+        <ul class="review-lines">
+          @for (line of lines(); track line.product.id) {
+            <li>
+              <strong>{{ line.product.name }}</strong>
+              <span class="calc">
+                <span>{{ line.quantity }} × {{ i18n.money(line.product.price) }}</span>
+                <span>{{ i18n.money(fromCents(line.grossCents)) }}</span>
+              </span>
+              @if (line.discountCents > 0) {
+                <span class="calc discount">
+                  <span>{{ t('order.discountLine', { percent: i18n.quantity(line.discountPercent), offer: line.product.offerName ?? '' }) }}</span>
+                  <span>−{{ i18n.money(fromCents(line.discountCents)) }}</span>
+                </span>
+              }
+              <span class="calc line-total">
+                <span>{{ t('order.lineTotal') }}</span>
+                <span>{{ i18n.money(fromCents(line.totalCents)) }}</span>
+              </span>
+            </li>
+          }
+        </ul>
+
+        <dl class="totals">
+          <div>
+            <dt>{{ t('order.subtotal') }}</dt>
+            <dd>{{ i18n.money(totals().gross) }}</dd>
+          </div>
+          <div>
+            <dt>{{ t('order.discounts') }}</dt>
+            <dd>−{{ i18n.money(totals().discount) }}</dd>
+          </div>
+          <div class="grand">
+            <dt>{{ t('order.total') }}</dt>
+            <dd>{{ i18n.money(totals().total) }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      @if (sendProblem(); as problem) {
+        <p class="alert" [class.warning]="problem === 'order.changed'" [class.error]="problem !== 'order.changed'" role="alert">
+          {{ t(problem) }}
+        </p>
+      }
+
+      <button type="button" class="primary send" (click)="send()" [disabled]="sending()">
+        {{ t(sending() ? 'order.sending' : sendProblem() && sendProblem() !== 'order.changed' ? 'order.sendAgain' : 'order.send') }}
+      </button>
+    }
+
+    <!-- ---------- 3. Sent ---------- -->
+    @case ('sent') {
+      @if (saved(); as order) {
+        <section class="card sent">
+          <span class="tick"><app-icon name="check" [size]="28" /></span>
+          <h1>{{ t('order.sentTitle') }}</h1>
+          <p class="secondary-text">{{ t('order.sentText', { customer: order.customerName }) }}</p>
+
+          <dl class="totals">
+            <div>
+              <dt>{{ t('orders.number') }}</dt>
+              <dd>{{ order.orderNumber }}</dd>
+            </div>
+            <div>
+              <dt>{{ t('orders.status') }}</dt>
+              <dd><span class="badge warning">{{ t('orders.pending') }}</span></dd>
+            </div>
+            <div class="grand">
+              <dt>{{ t('order.total') }}</dt>
+              <dd>{{ i18n.money(order.total) }}</dd>
+            </div>
+          </dl>
+
+          <div class="row">
+            <a class="button primary" routerLink="/agent">{{ t('order.backToCustomers') }}</a>
+            <a class="button" routerLink="/agent/orders">{{ t('nav.myOrders') }}</a>
+          </div>
+        </section>
+      }
+    }
+  }
+}

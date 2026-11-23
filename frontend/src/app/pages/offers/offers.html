@@ -1,0 +1,214 @@
+<app-page-intro
+  [eyebrow]="t('offers.eyebrow')"
+  [title]="t('offers.title')"
+  [description]="t('offers.intro')"
+/>
+
+@if (draft(); as d) {
+  <!-- ---------- Form ---------- -->
+  <form class="card" (ngSubmit)="save()">
+    <header class="card-heading">
+      <h2>{{ t(d.id === null ? 'offers.new' : 'offers.edit') }}</h2>
+    </header>
+
+    <div class="form-section fields">
+      <label class="field name">
+        {{ t('offers.name') }}
+        <input name="name" [(ngModel)]="d.name" maxlength="100" [placeholder]="t('offers.namePlaceholder')" />
+      </label>
+      <label class="field">
+        {{ t('offers.percent') }}
+        <input name="percent" type="number" [(ngModel)]="d.percent" min="0" max="100" step="0.1" inputmode="decimal" />
+      </label>
+      <label class="field">
+        {{ t('offers.startDate') }}
+        <input name="startDate" type="date" [(ngModel)]="d.startDate" />
+      </label>
+      <label class="field">
+        {{ t('offers.endDate') }}
+        <input name="endDate" type="date" [(ngModel)]="d.endDate" />
+      </label>
+      <label class="check enabled">
+        <input name="enabled" type="checkbox" [(ngModel)]="d.enabled" />
+        <span>
+          <strong>{{ t('offers.enabled') }}</strong>
+          <small>{{ t('offers.enabledHint') }}</small>
+        </span>
+      </label>
+    </div>
+
+    <div class="form-section">
+      <div class="section-heading">
+        <h3>{{ t('offers.products') }}</h3>
+        <span class="badge">{{ t('offers.selected', { count: d.productIds.size }) }}</span>
+        <input
+          type="search"
+          name="productQuery"
+          [ngModel]="productQuery()"
+          (ngModelChange)="productQuery.set($event)"
+          [placeholder]="t('common.search')"
+          [attr.aria-label]="t('common.search')"
+        />
+      </div>
+      <div class="check-list">
+        @for (product of visibleProducts(); track product.id) {
+          <label class="check">
+            <input
+              type="checkbox"
+              [checked]="d.productIds.has(product.id)"
+              (change)="toggle(d.productIds, product.id, $any($event.target).checked)"
+            />
+            <span>
+              <strong>{{ product.name }}</strong>
+              <small>{{ product.code }} · {{ i18n.money(product.price) }}</small>
+            </span>
+          </label>
+        } @empty {
+          <p class="secondary-text">{{ t('common.noResults') }}</p>
+        }
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="section-heading">
+        <h3>{{ t('offers.customers') }}</h3>
+        <div class="segmented" role="group">
+          <button type="button" [class.active]="d.allCustomers" [attr.aria-pressed]="d.allCustomers" (click)="d.allCustomers = true">
+            {{ t('offers.allCustomers') }}
+          </button>
+          <button type="button" [class.active]="!d.allCustomers" [attr.aria-pressed]="!d.allCustomers" (click)="d.allCustomers = false">
+            {{ t('offers.chosenCustomers') }}
+          </button>
+        </div>
+      </div>
+
+      @if (!d.allCustomers) {
+        <div class="section-heading">
+          <span class="badge">{{ t('offers.selected', { count: d.customerIds.size }) }}</span>
+          <input
+            type="search"
+            name="customerQuery"
+            [ngModel]="customerQuery()"
+            (ngModelChange)="customerQuery.set($event)"
+            [placeholder]="t('common.search')"
+            [attr.aria-label]="t('common.search')"
+          />
+        </div>
+        <div class="check-list">
+          @for (customer of visibleCustomers(); track customer.id) {
+            <label class="check">
+              <input
+                type="checkbox"
+                [checked]="d.customerIds.has(customer.id)"
+                (change)="toggle(d.customerIds, customer.id, $any($event.target).checked)"
+              />
+              <span>
+                <strong>{{ customer.name }}</strong>
+                <small>{{ customer.address || customer.code }}</small>
+              </span>
+            </label>
+          } @empty {
+            <p class="secondary-text">{{ t('common.noResults') }}</p>
+          }
+        </div>
+      }
+    </div>
+
+    @if (formError(); as key) {
+      <p class="alert error card-alert" role="alert">{{ t(key) }}</p>
+    }
+
+    <footer class="form-footer">
+      <button type="button" (click)="closeForm()" [disabled]="saving()">{{ t('common.cancel') }}</button>
+      <button type="submit" class="primary" [disabled]="saving()">
+        {{ t(saving() ? 'common.saving' : 'common.save') }}
+      </button>
+    </footer>
+  </form>
+} @else {
+  <!-- ---------- List ---------- -->
+  <section class="card">
+    <header class="card-heading">
+      <div>
+        <h2>{{ t('offers.count', { count: offers().length }) }}</h2>
+        <p class="secondary-text">{{ t('offers.rule') }}</p>
+      </div>
+      <div class="card-actions">
+        <button type="button" class="primary" (click)="startNew()" [disabled]="loading() || loadFailed()">
+          <app-icon name="plus" [size]="18" />
+          {{ t('offers.new') }}
+        </button>
+      </div>
+    </header>
+
+    @switch (notice()) {
+      @case ('saved') {
+        <p class="alert success card-alert" role="status">{{ t('offers.saved') }}</p>
+      }
+      @case ('deleted') {
+        <p class="alert success card-alert" role="status">{{ t('offers.deleted') }}</p>
+      }
+      @case ('deleteFailed') {
+        <p class="alert error card-alert" role="alert">{{ t('offers.deleteFailed') }}</p>
+      }
+    }
+
+    @if (loading() && !offers().length) {
+      <app-skeleton />
+    } @else if (loadFailed()) {
+      <div class="empty-state">
+        <p>{{ t('common.loadFailed') }}</p>
+        <button type="button" (click)="load()">{{ t('common.retry') }}</button>
+      </div>
+    } @else if (!offers().length) {
+      <p class="empty-state">{{ t('offers.empty') }}</p>
+    } @else {
+      <div class="table-wrap">
+        <table class="data">
+          <thead>
+            <tr>
+              <th>{{ t('offers.name') }}</th>
+              <th class="num">{{ t('offers.discount') }}</th>
+              <th>{{ t('offers.products') }}</th>
+              <th>{{ t('offers.customers') }}</th>
+              <th>{{ t('offers.period') }}</th>
+              <th>{{ t('offers.statusLabel') }}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody class="stagger">
+            @for (offer of offers(); track offer.id) {
+              <tr>
+                <td class="main" [attr.data-label]="t('offers.name')">{{ offer.name }}</td>
+                <td class="num" [attr.data-label]="t('offers.discount')">−{{ i18n.quantity(offer.discountPercent) }}%</td>
+                <td [attr.data-label]="t('offers.products')">{{ productsLabel(offer) }}</td>
+                <td [attr.data-label]="t('offers.customers')">{{ customersLabel(offer) }}</td>
+                <td [attr.data-label]="t('offers.period')">{{ periodLabel(offer) }}</td>
+                <td [attr.data-label]="t('offers.statusLabel')">
+                  <span class="badge" [class]="statusBadge[offer.status]">{{ t(statusKey[offer.status]) }}</span>
+                </td>
+                <td class="actions">
+                  <button type="button" class="icon-button small" (click)="edit(offer)" [attr.aria-label]="t('common.edit')">
+                    <app-icon name="edit" [size]="18" />
+                  </button>
+                  <button type="button" class="icon-button small" (click)="askDelete(offer)" [attr.aria-label]="t('common.delete')">
+                    <app-icon name="trash" [size]="18" />
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+}
+
+<app-confirm-dialog
+  [title]="t('offers.deleteTitle')"
+  [message]="t('offers.deleteText', { name: toDelete()?.name ?? '' })"
+  [confirmLabel]="t('common.delete')"
+  [cancelLabel]="t('common.cancel')"
+  [danger]="true"
+  (confirmed)="deleteConfirmed()"
+/>

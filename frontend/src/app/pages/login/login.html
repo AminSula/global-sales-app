@@ -1,0 +1,57 @@
+<div class="login-shell">
+  <form class="login-form" (ngSubmit)="submit()">
+    <div class="brand">
+      <span class="logo">P</span>
+      <span class="wordmark">Pilot</span>
+      <button
+        type="button"
+        class="icon-button lang-toggle"
+        (click)="i18n.toggle()"
+        [attr.aria-label]="t('lang.switch')"
+        [title]="t('lang.switch')"
+      >
+        @if (i18n.lang() === 'sq') {
+          <span class="swap">EN</span>
+        } @else {
+          <span class="swap">SQ</span>
+        }
+      </button>
+    </div>
+
+    <div class="heading">
+      <h1>{{ t('login.title') }}</h1>
+      <p class="secondary-text">{{ t('app.tagline') }}</p>
+    </div>
+
+    @if (errorKey(); as key) {
+      <p class="alert error" role="alert">{{ t(key) }}</p>
+    }
+
+    <label class="field">
+      {{ t('login.username') }}
+      <input
+        name="username"
+        [(ngModel)]="username"
+        autocomplete="username"
+        autocapitalize="none"
+        spellcheck="false"
+        required
+      />
+    </label>
+
+    <label class="field">
+      {{ t('login.password') }}
+      <input
+        name="password"
+        type="password"
+        [(ngModel)]="password"
+        autocomplete="current-password"
+        required
+      />
+    </label>
+
+    <button type="submit" class="primary submit" [disabled]="sending()">
+      {{ t(sending() ? 'login.sending' : 'login.submit') }}
+    </button>
+  </form>
+</div>

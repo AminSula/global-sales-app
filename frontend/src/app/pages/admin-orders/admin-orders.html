@@ -1,0 +1,219 @@
+<app-page-intro [eyebrow]="t('orders.eyebrow')" [title]="t('nav.orders')" [description]="t('orders.adminIntro')" />
+
+<section class="card">
+  <header class="card-heading">
+    <div>
+      <h2>{{ t('orders.count', { count: filtered().length }) }}</h2>
+      <p class="secondary-text">
+        {{ t('orders.summary', { total: i18n.money(filteredTotal()), pending: pendingCount() }) }}
+      </p>
+    </div>
+    <div class="card-actions">
+      <input
+        type="search"
+        [ngModel]="query()"
+        (ngModelChange)="query.set($event)"
+        [placeholder]="t('orders.search')"
+        [attr.aria-label]="t('orders.search')"
+      />
+      <button type="button" (click)="load()" [disabled]="loading()">
+        <app-icon name="refresh" [size]="18" [class.spin]="loading()" />
+        {{ t('common.refresh') }}
+      </button>
+    </div>
+  </header>
+
+  <div class="filters">
+    <div class="segmented" role="group" [attr.aria-label]="t('orders.status')">
+      <button type="button" [class.active]="status() === 'ALL'" [attr.aria-pressed]="status() === 'ALL'" (click)="status.set('ALL')">
+        {{ t('orders.all') }}
+      </button>
+      <button type="button" [class.active]="status() === 'PENDING'" [attr.aria-pressed]="status() === 'PENDING'" (click)="status.set('PENDING')">
+        {{ t('orders.pending') }}
+      </button>
+      <button type="button" [class.active]="status() === 'APPROVED'" [attr.aria-pressed]="status() === 'APPROVED'" (click)="status.set('APPROVED')">
+        {{ t('orders.approved') }}
+      </button>
+    </div>
+
+    @if (agents().length > 1) {
+      <div class="segmented" role="group" [attr.aria-label]="t('orders.agent')">
+        <button type="button" [class.active]="agent() === ''" [attr.aria-pressed]="agent() === ''" (click)="agent.set('')">
+          {{ t('orders.allAgents') }}
+        </button>
+        @for (name of agents(); track name) {
+          <button type="button" [class.active]="agent() === name" [attr.aria-pressed]="agent() === name" (click)="agent.set(name)">
+            {{ name }}
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  @if (loading() && !orders().length) {
+    <app-skeleton />
+  } @else if (loadFailed()) {
+    <div class="empty-state">
+      <p>{{ t('common.loadFailed') }}</p>
+      <button type="button" (click)="load()">{{ t('common.retry') }}</button>
+    </div>
+  } @else if (!orders().length) {
+    <p class="empty-state">{{ t('orders.adminEmpty') }}</p>
+  } @else if (!filtered().length) {
+    <p class="empty-state">{{ t('common.noResults') }}</p>
+  } @else {
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr>
+            <th>{{ t('orders.numberShort') }}</th>
+            <th>{{ t('orders.date') }}</th>
+            <th>{{ t('orders.customer') }}</th>
+            <th>{{ t('orders.agent') }}</th>
+            <th class="num">{{ t('order.total') }}</th>
+            <th>{{ t('orders.status') }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody class="stagger">
+          @for (order of filtered(); track order.id) {
+            <tr class="clickable" (click)="open(order)">
+              <td class="code" [attr.data-label]="t('orders.numberShort')">{{ order.orderNumber }}</td>
+              <td [attr.data-label]="t('orders.date')">{{ i18n.dateTime(order.createdAt) }}</td>
+              <td class="main" [attr.data-label]="t('orders.customer')">{{ order.customerName }}</td>
+              <td [attr.data-label]="t('orders.agent')">{{ order.agentName }}</td>
+              <td class="num" [attr.data-label]="t('order.total')">{{ i18n.money(order.total) }}</td>
+              <td [attr.data-label]="t('orders.status')">
+                @if (order.status === 'APPROVED') {
+                  <span class="badge success">{{ t('orders.approved') }}</span>
+                } @else {
+                  <span class="badge warning">{{ t('orders.pending') }}</span>
+                }
+              </td>
+              <td class="actions">
+                <!-- The row is clickable with the mouse; this button is the keyboard and screen-reader way in. -->
+                <button type="button" class="small" (click)="open(order); $event.stopPropagation()">
+                  {{ t('orders.view') }}
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
+
+<!-- ---------- Order details ---------- -->
+<dialog #details class="order-dialog" (close)="selected.set(null)">
+  @if (selected(); as order) {
+    <header>
+      <div>
+        <p class="eyebrow">{{ t('orders.order') }}</p>
+        <h2>{{ order.orderNumber }}</h2>
+      </div>
+      @if (order.status === 'APPROVED') {
+        <span class="badge success">{{ t('orders.approved') }}</span>
+      } @else {
+        <span class="badge warning">{{ t('orders.pending') }}</span>
+      }
+      <button type="button" class="icon-button small" (click)="close()" [attr.aria-label]="t('common.close')">
+        <app-icon name="x" [size]="18" />
+      </button>
+    </header>
+
+    <div class="body">
+      <dl class="meta">
+        <div>
+          <dt>{{ t('orders.customer') }}</dt>
+          <dd>{{ order.customerName }} <small>{{ order.customerCode }}</small></dd>
+        </div>
+        <div>
+          <dt>{{ t('orders.agent') }}</dt>
+          <dd>{{ order.agentName }}</dd>
+        </div>
+        <div>
+          <dt>{{ t('orders.date') }}</dt>
+          <dd>{{ i18n.dateTime(order.createdAt) }}</dd>
+        </div>
+        @if (order.approvedAt) {
+          <div>
+            <dt>{{ t('orders.approvedBy') }}</dt>
+            <dd>{{ order.approvedByName }} <small>{{ i18n.dateTime(order.approvedAt) }}</small></dd>
+          </div>
+        }
+      </dl>
+
+      @switch (notice()) {
+        @case ('approved') {
+          <p class="alert success" role="status">{{ t('orders.approvedNotice') }}</p>
+        }
+        @case ('approveFailed') {
+          <p class="alert error" role="alert">{{ t('orders.approveFailed') }}</p>
+        }
+      }
+
+      <div class="table-wrap lines">
+        <table class="data">
+          <thead>
+            <tr>
+              <th>{{ t('orders.product') }}</th>
+              <th class="num">{{ t('order.quantity') }}</th>
+              <th class="num">{{ t('products.price') }}</th>
+              <th class="num">{{ t('offers.discount') }}</th>
+              <th class="num">{{ t('order.total') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (line of order.lines; track line.lineNo) {
+              <tr>
+                <td class="main" [attr.data-label]="t('orders.product')">
+                  {{ line.productName }}
+                  <small class="sub">{{ line.productCode }}</small>
+                </td>
+                <td class="num" [attr.data-label]="t('order.quantity')">{{ i18n.quantity(line.quantity) }}</td>
+                <td class="num" [attr.data-label]="t('products.price')">{{ i18n.money(line.unitPrice) }}</td>
+                <td class="num" [attr.data-label]="t('offers.discount')">
+                  @if (line.discountPercent > 0) {
+                    −{{ i18n.quantity(line.discountPercent) }}%
+                    <small class="sub">{{ line.offerName }}</small>
+                  } @else {
+                    —
+                  }
+                </td>
+                <td class="num" [attr.data-label]="t('order.total')">
+                  {{ i18n.money(line.lineTotal) }}
+                  @if (line.discountPercent > 0) {
+                    <small class="sub"><s>{{ i18n.money(gross(line.quantity, line.unitPrice)) }}</s></small>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <footer>
+      <div class="grand">
+        <span>{{ t('order.total') }}</span>
+        <strong>{{ i18n.money(order.total) }}</strong>
+      </div>
+      <button type="button" (click)="close()">{{ t('common.close') }}</button>
+      @if (order.status === 'PENDING') {
+        <button type="button" class="primary" (click)="askApprove()" [disabled]="approving()">
+          <app-icon name="check" [size]="18" />
+          {{ t(approving() ? 'common.saving' : 'orders.approve') }}
+        </button>
+      }
+    </footer>
+  }
+</dialog>
+
+<app-confirm-dialog
+  [title]="t('orders.approveTitle')"
+  [message]="t('orders.approveText', { number: selected()?.orderNumber ?? '' })"
+  [confirmLabel]="t('orders.approve')"
+  [cancelLabel]="t('common.cancel')"
+  (confirmed)="approve()"
+/>

@@ -1,0 +1,73 @@
+@use 'mixins' as *;
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--ui-space-3);
+}
+
+.visits {
+  display: grid;
+  gap: var(--ui-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.visit {
+  @include surface;
+  @include hover-lift;
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-3);
+  min-height: 72px;
+  padding: var(--ui-space-3) var(--ui-space-4);
+  color: inherit;
+  text-decoration: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--ui-accent);
+    outline-offset: 2px;
+  }
+}
+
+.order {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--ui-radius-pill);
+  background: var(--ui-accent-soft);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.who {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+
+  strong {
+    font-size: var(--ui-text-md);
+    font-weight: 600;
+  }
+
+  small {
+    color: var(--ui-secondary);
+    font-size: var(--ui-text-sm);
+  }
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-1);
+  margin-top: var(--ui-space-1);
+}
+
+.chevron {
+  color: var(--ui-muted);
+}

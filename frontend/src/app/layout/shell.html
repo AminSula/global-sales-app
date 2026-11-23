@@ -1,0 +1,155 @@
+<!-- ---------- Desktop: sidebar ---------- -->
+<aside class="sidebar" [class.closed]="collapsed()">
+  <div class="brand">
+    <span class="logo">P</span>
+    <span class="wordmark">Pilot</span>
+  </div>
+
+  <p class="nav-label">{{ t('nav.menu') }}</p>
+  <!-- --i moves the highlight: every item is the same height, so it slides by whole steps. -->
+  <nav class="side-nav" [class.no-active]="activeIndex() < 0" [style.--i]="activeIndex() < 0 ? 0 : activeIndex()">
+    @for (item of items(); track item.path; let i = $index) {
+      <a [routerLink]="item.path" [class.active]="i === activeIndex()">
+        <app-icon [name]="item.icon" />
+        <span>{{ t(item.labelKey) }}</span>
+      </a>
+    }
+  </nav>
+
+  <div class="profile">
+    <span class="avatar">{{ initials() }}</span>
+    <span class="who">
+      <strong>{{ auth.user()?.fullName }}</strong>
+      <small>{{ roleLabel() }}</small>
+    </span>
+  </div>
+</aside>
+
+<!-- ---------- Phones: one slim bar at the top ---------- -->
+<header class="mobile-bar">
+  <nav class="tabs" #tabStrip>
+    <span
+      class="highlight"
+      [class.hidden]="activeIndex() < 0"
+      [style.width.px]="highlight().width"
+      [style.transform]="'translateX(' + highlight().left + 'px)'"
+    ></span>
+    @for (item of items(); track item.path; let i = $index) {
+      <a #tab [routerLink]="item.path" [class.active]="i === activeIndex()">
+        <app-icon [name]="item.icon" [size]="18" />
+        <span>{{ t(item.labelKey) }}</span>
+      </a>
+    }
+  </nav>
+
+  @if (isAdmin()) {
+    <!-- The administrator's tabs need the width, so the buttons sit in this menu. -->
+    <div class="account">
+      <button
+        type="button"
+        class="avatar-button"
+        (click)="toggleMenu($event)"
+        [attr.aria-label]="t('account.menu')"
+        [attr.aria-expanded]="menuOpen()"
+      >
+        {{ initials() }}
+      </button>
+
+      @if (menuOpen()) {
+        <div class="menu">
+          <div class="menu-who">
+            <strong>{{ auth.user()?.fullName }}</strong>
+            <small>{{ roleLabel() }}</small>
+          </div>
+
+          <div class="menu-row">
+            <span>{{ t('account.language') }}</span>
+            <div class="segmented" role="group">
+              <button type="button" [class.active]="i18n.lang() === 'sq'" [attr.aria-pressed]="i18n.lang() === 'sq'" (click)="i18n.set('sq')">SQ</button>
+              <button type="button" [class.active]="i18n.lang() === 'en'" [attr.aria-pressed]="i18n.lang() === 'en'" (click)="i18n.set('en')">EN</button>
+            </div>
+          </div>
+
+          <div class="menu-row">
+            <span>{{ t('account.theme') }}</span>
+            <div class="segmented" role="group">
+              <button type="button" [class.active]="theme.current() === 'light'" [attr.aria-pressed]="theme.current() === 'light'" [attr.aria-label]="t('theme.light')" (click)="theme.set('light')">
+                <app-icon name="sun" [size]="16" />
+              </button>
+              <button type="button" [class.active]="theme.current() === 'dark'" [attr.aria-pressed]="theme.current() === 'dark'" [attr.aria-label]="t('theme.dark')" (click)="theme.set('dark')">
+                <app-icon name="moon" [size]="16" />
+              </button>
+            </div>
+          </div>
+
+          <button type="button" class="sign-out" (click)="signOut()">
+            <app-icon name="logout" [size]="18" />
+            {{ t('nav.logout') }}
+          </button>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="bar-actions">
+      <ng-container [ngTemplateOutlet]="buttons" />
+    </div>
+  }
+</header>
+
+<main class="workspace" [class.wide]="collapsed()">
+  <!-- Desktop only -->
+  <header class="topbar">
+    <button
+      type="button"
+      class="icon-button"
+      (click)="toggleSidebar()"
+      [attr.aria-label]="t(collapsed() ? 'nav.open' : 'nav.close')"
+      [attr.aria-expanded]="!collapsed()"
+    >
+      <app-icon name="menu" />
+    </button>
+
+    <div class="top-actions">
+      <ng-container [ngTemplateOutlet]="buttons" />
+    </div>
+  </header>
+
+  @if (!network.online()) {
+    <p class="alert warning offline" role="status">{{ t('common.offline') }}</p>
+  }
+
+  <router-outlet />
+</main>
+
+<!-- Language, theme and sign-out buttons (desktop top row, and the agent's phone bar). -->
+<ng-template #buttons>
+  <button
+    type="button"
+    class="icon-button lang-toggle"
+    (click)="i18n.toggle()"
+    [attr.aria-label]="t('lang.switch')"
+    [title]="t('lang.switch')"
+  >
+    <!-- Two branches so the label is a new element each time and plays its little turn. -->
+    @if (i18n.lang() === 'sq') {
+      <span class="swap">EN</span>
+    } @else {
+      <span class="swap">SQ</span>
+    }
+  </button>
+  <button
+    type="button"
+    class="icon-button"
+    (click)="theme.toggle()"
+    [attr.aria-label]="t(theme.current() === 'light' ? 'theme.toDark' : 'theme.toLight')"
+  >
+    @if (theme.current() === 'light') {
+      <app-icon name="moon" class="swap" />
+    } @else {
+      <app-icon name="sun" class="swap" />
+    }
+  </button>
+  <button type="button" class="icon-button" (click)="signOut()" [attr.aria-label]="t('nav.logout')">
+    <app-icon name="logout" />
+  </button>
+</ng-template>

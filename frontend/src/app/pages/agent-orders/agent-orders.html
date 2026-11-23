@@ -1,0 +1,58 @@
+<app-page-intro [eyebrow]="t('orders.eyebrow')" [title]="t('nav.myOrders')" [description]="t('orders.agentIntro')" />
+
+<div class="toolbar">
+  <span class="secondary-text">{{ t('orders.count', { count: orders().length }) }}</span>
+  <button type="button" class="small" (click)="load()" [disabled]="loading()">
+    <app-icon name="refresh" [size]="16" [class.spin]="loading()" />
+    {{ t('common.refresh') }}
+  </button>
+</div>
+
+@if (loadFailed()) {
+  <section class="card empty-state">
+    <p>{{ t('common.loadFailed') }}</p>
+    <button type="button" (click)="load()">{{ t('common.retry') }}</button>
+  </section>
+} @else if (loading() && !orders().length) {
+  <app-skeleton [rows]="4" cards />
+} @else if (!orders().length) {
+  <section class="card empty-state">{{ t('orders.agentEmpty') }}</section>
+} @else {
+  <div class="orders stagger">
+    @for (order of orders(); track order.id) {
+      <details class="card order">
+        <summary>
+          <span class="head">
+            <strong>{{ order.customerName }}</strong>
+            <small>{{ order.orderNumber }} · {{ i18n.dateTime(order.createdAt) }}</small>
+          </span>
+          <span class="side">
+            <b>{{ i18n.money(order.total) }}</b>
+            @if (order.status === 'APPROVED') {
+              <span class="badge success">{{ t('orders.approved') }}</span>
+            } @else {
+              <span class="badge warning">{{ t('orders.pending') }}</span>
+            }
+          </span>
+        </summary>
+
+        <ul class="lines">
+          @for (line of order.lines; track line.lineNo) {
+            <li>
+              <span>
+                {{ line.productName }}
+                <small>
+                  {{ i18n.quantity(line.quantity) }} × {{ i18n.money(line.unitPrice) }}
+                  @if (line.discountPercent > 0) {
+                    · −{{ i18n.quantity(line.discountPercent) }}%{{ line.offerName ? ' ' + line.offerName : '' }}
+                  }
+                </small>
+              </span>
+              <b>{{ i18n.money(line.lineTotal) }}</b>
+            </li>
+          }
+        </ul>
+      </details>
+    }
+  </div>
+}

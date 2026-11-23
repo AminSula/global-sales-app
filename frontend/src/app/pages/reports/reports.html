@@ -1,0 +1,277 @@
+<app-page-intro [eyebrow]="t('reports.eyebrow')" [title]="t('reports.title')" [description]="t('reports.intro')" />
+
+<!-- Filters: one row above everything they control -->
+<div class="filters">
+  <div class="segmented" role="group" [attr.aria-label]="t('reports.period')">
+    <button type="button" [class.active]="preset() === 'today'" [attr.aria-pressed]="preset() === 'today'" (click)="usePreset('today')">
+      {{ t('nav.today') }}
+    </button>
+    <button type="button" [class.active]="preset() === '7'" [attr.aria-pressed]="preset() === '7'" (click)="usePreset('7')">
+      {{ t('reports.last7') }}
+    </button>
+    <button type="button" [class.active]="preset() === '30'" [attr.aria-pressed]="preset() === '30'" (click)="usePreset('30')">
+      {{ t('reports.last30') }}
+    </button>
+    <button type="button" [class.active]="preset() === 'month'" [attr.aria-pressed]="preset() === 'month'" (click)="usePreset('month')">
+      {{ t('reports.thisMonth') }}
+    </button>
+  </div>
+
+  <div class="dates">
+    <label>
+      <span>{{ t('offers.startDate') }}</span>
+      <input type="date" [ngModel]="from()" (ngModelChange)="setFrom($event)" [max]="to()" />
+    </label>
+    <label>
+      <span>{{ t('offers.endDate') }}</span>
+      <input type="date" [ngModel]="to()" (ngModelChange)="setTo($event)" [min]="from()" />
+    </label>
+    <button type="button" class="icon-button" (click)="load()" [disabled]="loading()" [attr.aria-label]="t('common.refresh')">
+      <app-icon name="refresh" [size]="18" [class.spin]="loading()" />
+    </button>
+  </div>
+</div>
+
+@if (invalidRange()) {
+  <p class="alert error">{{ t('offers.error.dates') }}</p>
+} @else if (loadFailed()) {
+  <section class="card empty-state">
+    <p>{{ t('common.loadFailed') }}</p>
+    <button type="button" (click)="load()">{{ t('common.retry') }}</button>
+  </section>
+} @else if (!report()) {
+  <app-skeleton [rows]="4" cards />
+} @else {
+  @let r = report()!;
+
+  <!-- ---------- Headline numbers ---------- -->
+  <div class="stats stagger" [class.stale]="loading()">
+    <section class="stat">
+      <span class="chip"><app-icon name="clipboard" /></span>
+      <p class="label">{{ t('reports.orders') }}</p>
+      <p class="value" [appCountUp]="r.orders"></p>
+      <p class="caption">{{ t('reports.average', { value: i18n.money(r.averageOrder) }) }}</p>
+    </section>
+    <section class="stat">
+      <span class="chip"><app-icon name="chart" /></span>
+      <p class="label">{{ t('reports.value') }}</p>
+      <p class="value" [appCountUp]="r.value" format="money"></p>
+      <p class="caption">{{ t('reports.approvedValue', { value: i18n.money(r.approvedValue) }) }}</p>
+    </section>
+    <section class="stat">
+      <span class="chip"><app-icon name="calendar" /></span>
+      <p class="label">{{ t('reports.pending') }}</p>
+      <p class="value" [appCountUp]="r.pendingOrders"></p>
+      <p class="caption">{{ t('reports.pendingValue', { value: i18n.money(r.pendingValue) }) }}</p>
+    </section>
+    <section class="stat">
+      <span class="chip"><app-icon name="tag" /></span>
+      <p class="label">{{ t('reports.discounts') }}</p>
+      <p class="value" [appCountUp]="r.discountValue" format="money"></p>
+      <p class="caption">{{ t('reports.discountShare', { percent: i18n.quantity(discountShare()) }) }}</p>
+    </section>
+  </div>
+
+  @if (!r.orders) {
+    <section class="card empty-state">{{ t('reports.empty') }}</section>
+  } @else {
+    <!-- ---------- Value per day ---------- -->
+    <section class="card" [class.stale]="loading()">
+      <header class="card-heading">
+        <div>
+          <h2>{{ t('reports.byDay') }}</h2>
+          <p class="secondary-text">{{ i18n.date(r.from) }} – {{ i18n.date(r.to) }}</p>
+        </div>
+        <div class="segmented" role="group">
+          <button type="button" [class.active]="dayView() === 'chart'" [attr.aria-pressed]="dayView() === 'chart'" (click)="dayView.set('chart')">
+            {{ t('reports.chart') }}
+          </button>
+          <button type="button" [class.active]="dayView() === 'table'" [attr.aria-pressed]="dayView() === 'table'" (click)="dayView.set('table')">
+            {{ t('reports.table') }}
+          </button>
+        </div>
+      </header>
+
+      @if (dayView() === 'chart') {
+        <div class="chart" role="img" [attr.aria-label]="t('reports.byDay')">
+          <div class="axis" aria-hidden="true">
+            @for (tick of chart().ticks; track $index) {
+              <span>{{ i18n.compact(tick) }}</span>
+            }
+          </div>
+          <div class="plot">
+            <div class="grid" aria-hidden="true"><i></i><i></i><i></i></div>
+            <div class="bars">
+              @for (bar of chart().bars; track bar.date) {
+                <!-- The whole column is the hover/focus target, not just the painted bar. -->
+                <div class="slot" tabindex="0" [class.edge-start]="bar.edge === 'start'" [class.edge-end]="bar.edge === 'end'">
+                  @if (bar.isHighest) {
+                    <span class="peak" [style.bottom.%]="bar.height">{{ i18n.money(bar.value) }}</span>
+                  }
+                  <span class="bar" [style.height.%]="bar.height" [style.--i]="$index"></span>
+                  <span class="tip" role="tooltip">
+                    <b>{{ i18n.date(bar.date) }}</b>
+                    <span>{{ i18n.money(bar.value) }}</span>
+                    <small>{{ t('orders.count', { count: bar.orders }) }}</small>
+                  </span>
+                </div>
+              }
+            </div>
+          </div>
+          <div class="x-labels" aria-hidden="true">
+            @for (bar of chart().bars; track bar.date) {
+              <span>{{ bar.showLabel ? i18n.dayMonth(bar.date) : '' }}</span>
+            }
+          </div>
+        </div>
+      } @else {
+        <div class="table-wrap">
+          <table class="data">
+            <thead>
+              <tr>
+                <th>{{ t('orders.date') }}</th>
+                <th class="num">{{ t('reports.orders') }}</th>
+                <th class="num">{{ t('reports.value') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (day of r.days; track day.date) {
+                <tr>
+                  <td class="main" [attr.data-label]="t('orders.date')">{{ i18n.date(day.date) }}</td>
+                  <td class="num" [attr.data-label]="t('reports.orders')">{{ day.orders }}</td>
+                  <td class="num" [attr.data-label]="t('reports.value')">{{ i18n.money(day.value) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+
+    <div class="panels" [class.stale]="loading()">
+      <!-- ---------- Agents ---------- -->
+      <section class="card">
+        <header class="card-heading">
+          <h2>{{ t('reports.byAgent') }}</h2>
+        </header>
+        <div class="table-wrap">
+          <table class="data">
+            <thead>
+              <tr>
+                <th>{{ t('orders.agent') }}</th>
+                <th class="num">{{ t('reports.orders') }}</th>
+                <th class="num">{{ t('reports.value') }}</th>
+                <th>{{ t('reports.visits') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (agent of r.agents; track agent.agentName) {
+                <tr>
+                  <td class="main" [attr.data-label]="t('orders.agent')">{{ agent.agentName }}</td>
+                  <td class="num" [attr.data-label]="t('reports.orders')">{{ agent.orders }}</td>
+                  <td class="num" [attr.data-label]="t('reports.value')">{{ i18n.money(agent.value) }}</td>
+                  <td [attr.data-label]="t('reports.visits')">
+                    <span class="visits">
+                      <span class="meter" aria-hidden="true">
+                        <i [style.width.%]="percent(agent.customersOrdered, agent.customersAssigned)"></i>
+                      </span>
+                      {{ agent.customersOrdered }} / {{ agent.customersAssigned }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <p class="footnote">{{ t('reports.visitsHint') }}</p>
+      </section>
+
+      <!-- ---------- Offers ---------- -->
+      <section class="card">
+        <header class="card-heading">
+          <h2>{{ t('reports.byOffer') }}</h2>
+        </header>
+        @if (!r.offers.length) {
+          <p class="empty-state">{{ t('reports.noOffers') }}</p>
+        } @else {
+          <div class="table-wrap">
+            <table class="data">
+              <thead>
+                <tr>
+                  <th>{{ t('products.offer') }}</th>
+                  <th class="num">{{ t('reports.lines') }}</th>
+                  <th class="num">{{ t('reports.discountGiven') }}</th>
+                  <th class="num">{{ t('reports.value') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (offer of r.offers; track offer.offerName) {
+                  <tr>
+                    <td class="main" [attr.data-label]="t('products.offer')">{{ offer.offerName }}</td>
+                    <td class="num" [attr.data-label]="t('reports.lines')">{{ offer.lines }}</td>
+                    <td class="num" [attr.data-label]="t('reports.discountGiven')">−{{ i18n.money(offer.discountValue) }}</td>
+                    <td class="num" [attr.data-label]="t('reports.value')">{{ i18n.money(offer.value) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+
+      <!-- ---------- Top products ---------- -->
+      <section class="card">
+        <header class="card-heading">
+          <h2>{{ t('reports.topProducts') }}</h2>
+        </header>
+        <div class="table-wrap">
+          <table class="data">
+            <thead>
+              <tr>
+                <th>{{ t('orders.product') }}</th>
+                <th class="num">{{ t('order.quantity') }}</th>
+                <th class="num">{{ t('reports.value') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (product of r.products; track product.code) {
+                <tr>
+                  <td class="main" [attr.data-label]="t('orders.product')">{{ product.name }}</td>
+                  <td class="num" [attr.data-label]="t('order.quantity')">{{ i18n.quantity(product.quantity) }}</td>
+                  <td class="num" [attr.data-label]="t('reports.value')">{{ i18n.money(product.value) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ---------- Top customers ---------- -->
+      <section class="card">
+        <header class="card-heading">
+          <h2>{{ t('reports.topCustomers') }}</h2>
+        </header>
+        <div class="table-wrap">
+          <table class="data">
+            <thead>
+              <tr>
+                <th>{{ t('orders.customer') }}</th>
+                <th class="num">{{ t('reports.orders') }}</th>
+                <th class="num">{{ t('reports.value') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (customer of r.customers; track customer.code) {
+                <tr>
+                  <td class="main" [attr.data-label]="t('orders.customer')">{{ customer.name }}</td>
+                  <td class="num" [attr.data-label]="t('reports.orders')">{{ customer.orders }}</td>
+                  <td class="num" [attr.data-label]="t('reports.value')">{{ i18n.money(customer.value) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  }
+}

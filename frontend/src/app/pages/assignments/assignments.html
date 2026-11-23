@@ -1,0 +1,149 @@
+<app-page-intro
+  [eyebrow]="t('assignments.eyebrow')"
+  [title]="t('assignments.title')"
+  [description]="t('assignments.intro')"
+/>
+
+<section class="card">
+  <header class="card-heading">
+    <div class="segmented" role="group" [attr.aria-label]="t('assignments.agent')">
+      @for (agent of agents(); track agent.id) {
+        <button
+          type="button"
+          [class.active]="agent.id === agentId()"
+          [attr.aria-pressed]="agent.id === agentId()"
+          [disabled]="dirty() && agent.id !== agentId()"
+          (click)="selectAgent(agent.id)"
+        >
+          {{ agent.fullName }}
+        </button>
+      }
+    </div>
+
+    <div class="card-actions">
+      <input
+        type="date"
+        [ngModel]="date()"
+        (ngModelChange)="setDate($event)"
+        [disabled]="dirty()"
+        [attr.aria-label]="t('assignments.date')"
+      />
+      @if (dirty()) {
+        <button type="button" (click)="discard()" [disabled]="saving()">{{ t('common.cancel') }}</button>
+      }
+      <button type="button" class="primary" (click)="save()" [disabled]="!dirty() || saving()">
+        {{ t(saving() ? 'common.saving' : 'common.save') }}
+      </button>
+    </div>
+  </header>
+
+  @switch (notice()) {
+    @case ('saved') {
+      <p class="alert success card-alert" role="status">{{ t('assignments.saved') }}</p>
+    }
+    @case ('conflict') {
+      <p class="alert warning card-alert" role="alert">{{ t('assignments.conflict') }}</p>
+    }
+    @case ('failed') {
+      <p class="alert error card-alert" role="alert">{{ t('common.saveFailed') }}</p>
+    }
+  }
+  @if (dirty()) {
+    <p class="alert warning card-alert">{{ t('assignments.unsaved') }}</p>
+  }
+
+  @if (loadFailed()) {
+    <div class="empty-state">
+      <p>{{ t('common.loadFailed') }}</p>
+      <button type="button" (click)="loadAll()">{{ t('common.retry') }}</button>
+    </div>
+  } @else if (loading() && !agents().length) {
+    <app-skeleton />
+  } @else {
+    <div class="columns">
+      <div class="column">
+        <h3>{{ t('assignments.dayList', { count: assigned().length }) }}</h3>
+
+        @if (!assigned().length) {
+          <p class="hint">{{ t('assignments.empty') }}</p>
+        } @else {
+          <ol class="rows">
+            @for (customer of assigned(); track customer.customerId; let i = $index) {
+              <li>
+                <span class="order">{{ i + 1 }}</span>
+                <span class="who">
+                  <strong>{{ customer.name }}</strong>
+                  <small>{{ customer.address || customer.code }}</small>
+                </span>
+                <span class="row-actions">
+                  <button
+                    type="button"
+                    class="icon-button small"
+                    (click)="move(i, -1)"
+                    [disabled]="i === 0"
+                    [attr.aria-label]="t('assignments.moveUp')"
+                  >
+                    <app-icon name="up" [size]="18" />
+                  </button>
+                  <button
+                    type="button"
+                    class="icon-button small"
+                    (click)="move(i, 1)"
+                    [disabled]="i === assigned().length - 1"
+                    [attr.aria-label]="t('assignments.moveDown')"
+                  >
+                    <app-icon name="down" [size]="18" />
+                  </button>
+                  <button
+                    type="button"
+                    class="icon-button small"
+                    (click)="remove(i)"
+                    [attr.aria-label]="t('assignments.remove')"
+                  >
+                    <app-icon name="x" [size]="18" />
+                  </button>
+                </span>
+              </li>
+            }
+          </ol>
+        }
+      </div>
+
+      <div class="column">
+        <div class="column-heading">
+          <h3>{{ t('assignments.others') }}</h3>
+          <input
+            type="search"
+            [ngModel]="query()"
+            (ngModelChange)="query.set($event)"
+            [placeholder]="t('common.search')"
+            [attr.aria-label]="t('common.search')"
+          />
+        </div>
+
+        @if (!others().length) {
+          <p class="hint">{{ t('assignments.noOthers') }}</p>
+        } @else {
+          <ul class="rows">
+            @for (entry of others(); track entry.customer.id) {
+              <li [class.taken]="entry.takenBy">
+                <span class="who">
+                  <strong>{{ entry.customer.name }}</strong>
+                  <small>{{ entry.customer.address || entry.customer.code }}</small>
+                </span>
+                @if (entry.takenBy) {
+                  <span class="badge">{{ t('assignments.takenBy', { agent: entry.takenBy }) }}</span>
+                } @else {
+                  <button type="button" class="small" (click)="add(entry.customer)">
+                    <app-icon name="plus" [size]="16" />
+                    {{ t('assignments.add') }}
+                  </button>
+                }
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </div>
+  }
+</section>

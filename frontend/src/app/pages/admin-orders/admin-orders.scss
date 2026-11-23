@@ -1,0 +1,186 @@
+@use 'mixins' as *;
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-3);
+  padding: var(--ui-space-4) var(--ui-space-5);
+
+  // On phones the two filter groups sit in one row that scrolls sideways.
+  @include below(mobile) {
+    flex-wrap: nowrap;
+    padding: var(--ui-space-4);
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    .segmented {
+      flex: none;
+      max-width: none;
+    }
+  }
+}
+
+tr.clickable {
+  cursor: pointer;
+}
+
+td.actions {
+  text-align: end;
+
+  @include below(mobile) {
+    justify-content: flex-end;
+  }
+}
+
+// ---------- Details window ----------
+
+.order-dialog {
+  width: min(calc(100% - 32px), 820px);
+  max-height: min(calc(100dvh - 32px), 760px);
+  padding: 0;
+  border: 1px solid var(--ui-hairline);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  box-shadow: var(--ui-shadow-lg);
+  overflow: hidden;
+
+  &[open] {
+    display: flex;
+    flex-direction: column;
+    animation: dialog-in 200ms ease-out;
+  }
+
+  &::backdrop {
+    background: var(--ui-backdrop);
+    backdrop-filter: blur(4px);
+  }
+
+  header,
+  footer {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: var(--ui-space-3);
+    padding: var(--ui-space-4) var(--ui-space-5);
+
+    @include below(mobile) {
+      padding: var(--ui-space-4);
+    }
+  }
+
+  header {
+    border-bottom: 1px solid var(--ui-hairline);
+
+    > div {
+      flex: 1;
+    }
+  }
+
+  footer {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    border-top: 1px solid var(--ui-hairline);
+    background: var(--ui-page);
+  }
+}
+
+.body {
+  @include scrollbar;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+
+  .alert {
+    margin: 0 var(--ui-space-5) var(--ui-space-4);
+
+    @include below(mobile) {
+      margin: 0 var(--ui-space-4) var(--ui-space-4);
+    }
+  }
+}
+
+.meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--ui-space-4);
+  margin: 0;
+  padding: var(--ui-space-4) var(--ui-space-5);
+
+  @include below(mobile) {
+    padding: var(--ui-space-4);
+  }
+
+  dt {
+    color: var(--ui-muted);
+    font-size: var(--ui-text-xs);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  dd {
+    display: grid;
+    margin: 0;
+    font-weight: 500;
+  }
+
+  small {
+    color: var(--ui-secondary);
+    font-weight: 400;
+  }
+}
+
+.sub {
+  display: block;
+  color: var(--ui-secondary);
+  font-size: var(--ui-text-xs);
+  font-weight: 400;
+}
+
+.grand {
+  display: flex;
+  flex: 1;
+  align-items: baseline;
+  gap: var(--ui-space-3);
+  color: var(--ui-secondary);
+
+  strong {
+    color: var(--ui-text);
+    font-size: var(--ui-text-xl);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @include below(mobile) {
+    flex: 1 1 100%;
+    justify-content: space-between;
+  }
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+// On phones each line is a stack of label/value rows: keep the value and its small note together on the right.
+@include below(mobile) {
+  .lines td {
+    justify-content: flex-end;
+    gap: var(--ui-space-2);
+
+    &::before {
+      margin-inline-end: auto;
+    }
+  }
+
+  .sub {
+    display: inline;
+  }
+}

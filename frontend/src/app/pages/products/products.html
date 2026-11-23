@@ -1,0 +1,101 @@
+<app-page-intro
+  [eyebrow]="t('products.eyebrow')"
+  [title]="t('products.title')"
+  [description]="t('products.intro')"
+/>
+
+<section class="card">
+  <header class="card-heading">
+    <div>
+      <h2>{{ t('products.count', { count: products().length }) }}</h2>
+      <p class="secondary-text">
+        {{
+          loading() && !products().length
+            ? t('common.loading')
+            : lastSynced()
+              ? t('sync.last', { when: i18n.dateTime(lastSynced()!) })
+              : t('sync.never')
+        }}
+      </p>
+    </div>
+    <div class="card-actions">
+      <input
+        type="search"
+        [ngModel]="query()"
+        (ngModelChange)="query.set($event)"
+        [placeholder]="t('common.search')"
+        [attr.aria-label]="t('common.search')"
+      />
+      <button type="button" class="primary" (click)="refresh()" [disabled]="syncing()">
+        <app-icon name="refresh" [size]="18" [class.spin]="syncing()" />
+        {{ syncing() ? t('sync.running') : t('sync.button') }}
+      </button>
+    </div>
+  </header>
+
+  @if (syncFailed()) {
+    <p class="alert error card-alert" role="alert">{{ t('sync.failed') }}</p>
+  }
+  @if (syncResult(); as result) {
+    <p class="alert success card-alert" role="status">
+      {{
+        t('products.synced', {
+          total: result.products,
+          created: result.productsNew,
+          changed: result.productsChanged,
+          removed: result.productsRemoved,
+        })
+      }}
+    </p>
+  }
+
+  @if (loading() && !products().length) {
+    <app-skeleton />
+  } @else if (loadFailed()) {
+    <div class="empty-state">
+      <p>{{ t('common.loadFailed') }}</p>
+      <button type="button" (click)="load()">{{ t('common.retry') }}</button>
+    </div>
+  } @else if (!products().length) {
+    <p class="empty-state">{{ t('sync.empty') }}</p>
+  } @else if (!filtered().length) {
+    <p class="empty-state">{{ t('common.noResults') }}</p>
+  } @else {
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr>
+            <th>{{ t('products.code') }}</th>
+            <th>{{ t('products.name') }}</th>
+            <th class="num">{{ t('products.price') }}</th>
+            <th>{{ t('products.offer') }}</th>
+            <th class="num">{{ t('products.stock') }}</th>
+          </tr>
+        </thead>
+        <tbody class="stagger">
+          @for (product of filtered(); track product.id) {
+            <tr>
+              <td class="code" [attr.data-label]="t('products.code')">{{ product.code }}</td>
+              <td class="main" [attr.data-label]="t('products.name')">{{ product.name }}</td>
+              <td class="num" [attr.data-label]="t('products.price')">{{ i18n.money(product.price) }}</td>
+              <td [attr.data-label]="t('products.offer')">
+                @if (product.offerPercent) {
+                  <span class="badge warning">−{{ i18n.quantity(product.offerPercent) }}% · {{ product.offerName }}</span>
+                } @else {
+                  <span class="secondary-text">—</span>
+                }
+              </td>
+              <td class="num" [attr.data-label]="t('products.stock')">
+                @if (product.stock > 0) {
+                  <span class="badge success">{{ i18n.quantity(product.stock) }} · {{ t('products.inStock') }}</span>
+                } @else {
+                  <span class="badge warning">{{ t('products.outOfStock') }}</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

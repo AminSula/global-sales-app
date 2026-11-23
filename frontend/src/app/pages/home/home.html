@@ -1,0 +1,25 @@
+<app-page-intro
+  [eyebrow]="t('common.workspace')"
+  [title]="t('home.welcome', { name: auth.user()?.fullName ?? '' })"
+  [description]="t(isAdmin() ? 'home.adminIntro' : 'home.agentIntro')"
+/>
+
+<section class="card card-pad status">
+  <div>
+    <h2>{{ t('home.serverTitle') }}</h2>
+    <p class="secondary-text">{{ t('home.serverText') }}</p>
+  </div>
+
+  @switch (server()) {
+    @case ('checking') {
+      <span class="badge">{{ t('home.serverChecking') }}</span>
+    }
+    @case ('ok') {
+      <span class="badge success">{{ t('home.serverOk') }}</span>
+    }
+    @case ('failed') {
+      <span class="badge danger">{{ t('home.serverFailed') }}</span>
+      <button type="button" (click)="checkServer()">{{ t('common.retry') }}</button>
+    }
+  }
+</section>

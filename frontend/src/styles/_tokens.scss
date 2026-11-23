@@ -1,0 +1,114 @@
+// Design tokens – the single source of truth for colour, type, space and motion.
+// Components must use these variables and never hard-code a colour.
+
+:root {
+  // Colour
+  --ui-page: #f5f7fa;
+  --ui-surface: #ffffff;
+  --ui-accent: #f5b800;
+  --ui-accent-hover: #dfa700;
+  --ui-accent-soft: rgb(245 184 0 / 12%); // highlighted backgrounds (active menu item, chips, avatars)
+  --ui-surface-tint: #fffbeb; // a card that is "chosen" (accent at 8% over the surface)
+  --ui-hairline-start: rgb(245 184 0 / 24%); // where the card border's gradient begins
+  --ui-glow: rgb(245 184 0 / 8%); // faint wash behind the login card
+  --ui-on-accent: #1a1f2b; // text/icons on an accent fill (same in both themes)
+  --ui-chart: #b88a00; // chart bars: the accent, darkened to stay readable on white
+  --ui-text: #1a1f2b;
+  --ui-secondary: #6b7280;
+  --ui-muted: #9ca3af;
+  --ui-hairline: rgb(0 0 0 / 6%);
+  --ui-border-strong: rgb(0 0 0 / 14%); // inputs and secondary buttons
+  --ui-row-hover: rgb(26 31 43 / 3%);
+  --ui-track: rgb(26 31 43 / 6%);
+  --ui-backdrop: rgb(26 31 43 / 45%);
+
+  // Semantic: dark text on a soft tint, plus a solid for indicators
+  --ui-success: #166534;
+  --ui-success-soft: #dcfce7;
+  --ui-success-solid: #16a34a;
+  --ui-warning: #92400e;
+  --ui-warning-soft: #fef3c7;
+  --ui-warning-solid: #f59e0b;
+  --ui-danger: #991b1b;
+  --ui-danger-soft: #fee2e2;
+  --ui-danger-solid: #dc2626;
+  --ui-info: #1e40af;
+  --ui-info-soft: #dbeafe;
+
+  // Type
+  --ui-font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --ui-text-xs: 12px;
+  --ui-text-sm: 14px;
+  --ui-text-md: 16px;
+  --ui-text-lg: 20px;
+  --ui-text-xl: 28px;
+
+  // Space
+  --ui-space-1: 4px;
+  --ui-space-2: 8px;
+  --ui-space-3: 12px;
+  --ui-space-4: 16px;
+  --ui-space-5: 24px;
+  --ui-space-6: 32px;
+  --ui-space-7: 48px;
+
+  // Radius
+  --ui-radius-sm: 8px;
+  --ui-radius-md: 12px;
+  --ui-radius-lg: 16px;
+  --ui-radius-pill: 999px;
+
+  // Shadow
+  --ui-shadow-sm: 0 2px 8px rgb(26 31 43 / 5%);
+  --ui-shadow-md: 0 6px 18px rgb(26 31 43 / 8%);
+  --ui-shadow-lg: 0 12px 36px rgb(26 31 43 / 12%);
+
+  // Motion
+  --ui-motion: 180ms ease-out;
+
+  // Control height: larger on phones for comfortable tapping
+  --ui-control: 40px;
+
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --ui-page: #0f1218;
+  --ui-surface: #171b24;
+  // In the dark theme a see-through accent turns muddy brown, so every tint is a neutral
+  // grey-white instead. The solid accent stays for signals: buttons, markers, focus, charts.
+  --ui-accent-soft: rgb(255 255 255 / 9%);
+  --ui-surface-tint: #1f2531;
+  --ui-hairline-start: rgb(255 255 255 / 14%);
+  --ui-glow: rgb(255 255 255 / 4%);
+  --ui-chart: #d9a300;
+  --ui-text: #f3f4f6;
+  --ui-secondary: #a1a8b5;
+  --ui-muted: #6f7785;
+  --ui-hairline: rgb(255 255 255 / 8%);
+  --ui-border-strong: rgb(255 255 255 / 16%);
+  --ui-row-hover: rgb(255 255 255 / 4%);
+  --ui-track: rgb(255 255 255 / 8%);
+  --ui-backdrop: rgb(0 0 0 / 60%);
+
+  --ui-success: #86efac;
+  --ui-success-soft: rgb(255 255 255 / 8%);
+  --ui-warning: #fcd34d;
+  --ui-warning-soft: rgb(255 255 255 / 8%);
+  --ui-danger: #fca5a5;
+  --ui-danger-soft: rgb(255 255 255 / 8%);
+  --ui-info: #93c5fd;
+  --ui-info-soft: rgb(255 255 255 / 8%);
+
+  --ui-shadow-sm: 0 2px 8px rgb(0 0 0 / 30%);
+  --ui-shadow-md: 0 6px 18px rgb(0 0 0 / 36%);
+  --ui-shadow-lg: 0 12px 36px rgb(0 0 0 / 45%);
+
+  color-scheme: dark;
+}
+
+@media (max-width: 767.98px) {
+  :root {
+    --ui-control: 48px;
+  }
+}

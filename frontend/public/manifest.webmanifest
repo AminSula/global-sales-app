@@ -1,0 +1,26 @@
+{
+  "name": "Pilot – Porosi nga terreni",
+  "short_name": "Pilot",
+  "description": "Paneli i administrimit dhe porositë nga terreni.",
+  "lang": "sq",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "./",
+  "start_url": "./",
+  "theme_color": "#f5b800",
+  "background_color": "#f5f7fa",
+  "icons": [
+    {
+      "src": "icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

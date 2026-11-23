@@ -1,0 +1,373 @@
+@use 'mixins' as *;
+
+$sidebar-width: 215px;
+$inset: var(--ui-space-4);
+$item-height: 44px;
+$item-gap: 4px;
+
+:host {
+  display: block;
+  min-height: 100dvh;
+}
+
+// ---------- Sidebar (desktop) ----------
+
+.sidebar {
+  @include surface;
+  position: fixed;
+  inset: $inset auto $inset $inset;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  width: $sidebar-width;
+  padding: var(--ui-space-4) var(--ui-space-3);
+  transition: transform var(--ui-motion), opacity var(--ui-motion);
+
+  &.closed {
+    transform: translateX(calc(-100% - 32px));
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  @include below(mobile) {
+    display: none;
+  }
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-3);
+  padding: 0 var(--ui-space-2) var(--ui-space-5);
+}
+
+.logo {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-accent);
+  color: var(--ui-on-accent);
+  font-size: var(--ui-text-lg);
+  font-weight: 600;
+}
+
+.wordmark {
+  font-size: var(--ui-text-lg);
+  font-weight: 600;
+}
+
+.nav-label {
+  padding: 0 var(--ui-space-2) var(--ui-space-2);
+  color: var(--ui-muted);
+  font-size: var(--ui-text-xs);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.side-nav {
+  position: relative;
+  display: grid;
+  gap: $item-gap;
+
+  // The highlight behind the active item, and its accent marker. Both slide.
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    transform: translateY(calc(var(--i) * #{$item-height + $item-gap}));
+    transition: transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity var(--ui-motion);
+  }
+
+  &::before {
+    top: 0;
+    right: 0;
+    height: $item-height;
+    border-radius: var(--ui-radius-md);
+    background: var(--ui-accent-soft);
+  }
+
+  &::after {
+    top: 10px;
+    width: 3px;
+    height: $item-height - 20px;
+    border-radius: var(--ui-radius-pill);
+    background: var(--ui-accent);
+  }
+
+  &.no-active::before,
+  &.no-active::after {
+    opacity: 0;
+  }
+
+  a {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--ui-space-3);
+    height: $item-height;
+    padding: 0 var(--ui-space-3);
+    border-radius: var(--ui-radius-md);
+    color: var(--ui-secondary);
+    font-weight: 500;
+    text-decoration: none;
+    transition: background-color var(--ui-motion), color var(--ui-motion);
+
+    @media (hover: hover) {
+      &:hover:not(.active) {
+        background: color-mix(in srgb, var(--ui-accent-soft) 50%, transparent);
+      }
+    }
+
+    &.active {
+      color: var(--ui-text);
+      font-weight: 600;
+    }
+  }
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-3);
+  margin-top: auto;
+  padding: var(--ui-space-4) var(--ui-space-2) 0;
+  border-top: 1px solid var(--ui-hairline);
+}
+
+.avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--ui-radius-pill);
+  background: var(--ui-accent-soft);
+  color: var(--ui-text);
+  font-weight: 600;
+}
+
+.who {
+  display: grid;
+  min-width: 0;
+
+  strong {
+    overflow: hidden;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  small {
+    color: var(--ui-secondary);
+    font-size: var(--ui-text-xs);
+  }
+}
+
+// ---------- Top bar (phones) ----------
+
+.mobile-bar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: none;
+  align-items: center;
+  gap: var(--ui-space-2);
+  padding: calc(var(--ui-space-2) + env(safe-area-inset-top)) var(--ui-space-4) var(--ui-space-2);
+  border-bottom: 1px solid var(--ui-hairline);
+  background: var(--ui-page);
+
+  @include below(mobile) {
+    display: flex;
+  }
+
+  // Everything in the bar is 36px, smaller than the page's 48px controls.
+  button {
+    min-height: 36px;
+  }
+
+  .icon-button {
+    flex: none;
+    width: 36px;
+  }
+}
+
+.tabs {
+  position: relative;
+  display: flex;
+  flex: 1;
+  gap: var(--ui-space-1);
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  // Fades the last tab out at the edge, as a hint that the strip scrolls.
+  mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+  padding-inline-end: var(--ui-space-4);
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  a {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: var(--ui-space-2);
+    height: 36px;
+    padding: 0 var(--ui-space-3);
+    border-radius: var(--ui-radius-pill);
+    color: var(--ui-secondary);
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color var(--ui-motion);
+
+    &.active {
+      color: var(--ui-text);
+      font-weight: 600;
+    }
+  }
+}
+
+// Slides under the active tab; its size and position are measured in shell.ts.
+.highlight {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 36px;
+  border-radius: var(--ui-radius-pill);
+  background: var(--ui-surface);
+  box-shadow: var(--ui-shadow-sm), inset 0 -2px 0 var(--ui-accent);
+  transition:
+    transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    width 280ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity var(--ui-motion);
+
+  &.hidden {
+    opacity: 0;
+  }
+}
+
+.bar-actions {
+  display: flex;
+  flex: none;
+  gap: var(--ui-space-1);
+}
+
+// ---------- Account menu (administrator on phones) ----------
+
+.account {
+  position: relative;
+  flex: none;
+}
+
+.avatar-button {
+  width: 36px;
+  padding: 0;
+  border-color: transparent;
+  border-radius: var(--ui-radius-pill);
+  background: var(--ui-accent);
+  color: var(--ui-on-accent);
+  font-size: var(--ui-text-xs);
+}
+
+.menu {
+  @include surface;
+  position: absolute;
+  top: calc(100% + var(--ui-space-2));
+  right: 0;
+  display: grid;
+  gap: var(--ui-space-3);
+  width: 240px;
+  padding: var(--ui-space-4);
+  box-shadow: var(--ui-shadow-lg);
+  transform-origin: top right;
+  animation: menu-in 180ms ease-out both;
+}
+
+.menu-who {
+  display: grid;
+  padding-bottom: var(--ui-space-3);
+  border-bottom: 1px solid var(--ui-hairline);
+
+  strong {
+    font-weight: 600;
+  }
+
+  small {
+    color: var(--ui-secondary);
+    font-size: var(--ui-text-xs);
+  }
+}
+
+.menu-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ui-space-3);
+  color: var(--ui-secondary);
+  font-weight: 500;
+
+  .segmented button {
+    min-width: 44px;
+    min-height: 30px;
+    padding: 0 var(--ui-space-3);
+    font-size: var(--ui-text-xs);
+  }
+}
+
+.sign-out {
+  width: 100%;
+  min-height: 40px;
+}
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-4px);
+  }
+}
+
+// ---------- Workspace ----------
+
+.workspace {
+  margin-inline-start: calc(#{$sidebar-width} + 16px);
+  padding: var(--ui-space-4) var(--ui-space-5) var(--ui-space-6) var(--ui-space-5);
+  transition: margin-inline-start var(--ui-motion);
+
+  &.wide {
+    margin-inline-start: 0;
+  }
+
+  @include below(mobile) {
+    margin-inline-start: 0;
+    padding: var(--ui-space-4) var(--ui-space-4) calc(var(--ui-space-5) + env(safe-area-inset-bottom));
+  }
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--ui-space-5);
+
+  @include below(mobile) {
+    display: none;
+  }
+}
+
+.top-actions {
+  display: flex;
+  gap: var(--ui-space-2);
+  margin-inline-start: auto;
+}
+
+.offline {
+  margin-bottom: var(--ui-space-4);
+}

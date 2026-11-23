@@ -1,0 +1,10 @@
+.status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-4);
+
+  div {
+    flex: 1 1 240px;
+  }
+}

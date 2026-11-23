@@ -1,0 +1,49 @@
+<app-page-intro
+  [eyebrow]="day() ? i18n.date(day()!.date) : t('nav.today')"
+  [title]="t('today.title')"
+  [description]="t('today.intro')"
+/>
+
+<div class="toolbar">
+  <span class="secondary-text">{{ t('today.count', { count: visits().length }) }}</span>
+  <button type="button" class="small" (click)="load()" [disabled]="loading()">
+    <app-icon name="refresh" [size]="16" [class.spin]="loading()" />
+    {{ t('common.refresh') }}
+  </button>
+</div>
+
+@if (loadFailed()) {
+  <section class="card empty-state">
+    <p>{{ t('common.loadFailed') }}</p>
+    <button type="button" (click)="load()">{{ t('common.retry') }}</button>
+  </section>
+} @else if (loading() && !day()) {
+  <app-skeleton [rows]="4" cards />
+} @else if (!visits().length) {
+  <section class="card empty-state">{{ t('today.empty') }}</section>
+} @else {
+  <ol class="visits stagger">
+    @for (visit of visits(); track visit.customerId) {
+      <li>
+        <a class="visit" [routerLink]="['/agent/order', visit.customerId]">
+          <span class="order">{{ visit.visitOrder }}</span>
+          <span class="who">
+            <strong>{{ visit.name }}</strong>
+            <small>{{ visit.address || visit.code }}</small>
+            @if (visit.hasDraft || visit.ordersToday) {
+              <span class="badges">
+                @if (visit.hasDraft) {
+                  <span class="badge warning">{{ t('today.draft') }}</span>
+                }
+                @if (visit.ordersToday) {
+                  <span class="badge success">{{ t('today.ordersToday', { count: visit.ordersToday }) }}</span>
+                }
+              </span>
+            }
+          </span>
+          <app-icon name="chevron" class="chevron" />
+        </a>
+      </li>
+    }
+  </ol>
+}

@@ -1,0 +1,95 @@
+// Shared mixins. Use in a component with:  @use 'mixins' as *;
+
+$breakpoints: (
+  tablet: 1024px,
+  mobile: 768px,
+  compact: 480px,
+);
+
+// Styles that apply below a named breakpoint: @include below(mobile) { ... }
+@mixin below($name) {
+  @media (max-width: #{map-get($breakpoints, $name) - 0.02px}) {
+    @content;
+  }
+}
+
+// 1px border that fades from a hint of accent to the neutral hairline.
+@mixin gradient-hairline($fill: var(--ui-surface)) {
+  border: 1px solid transparent;
+  background:
+    linear-gradient($fill, $fill) padding-box,
+    linear-gradient(135deg, var(--ui-hairline-start), var(--ui-hairline)) border-box;
+}
+
+// The white card every panel sits on. Padding is added by the caller.
+@mixin surface {
+  @include gradient-hairline;
+  border-radius: var(--ui-radius-lg);
+  box-shadow: var(--ui-shadow-sm);
+}
+
+// Only for cards that are clickable.
+@mixin hover-lift {
+  transition: transform var(--ui-motion), box-shadow var(--ui-motion);
+
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--ui-shadow-md);
+    }
+  }
+}
+
+@mixin scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ui-border-strong) transparent;
+}
+
+// Turns a table into stacked label/value rows on phones.
+// Each <td> needs data-label="Column name"; give the main cell class="main".
+@mixin stack-table {
+  thead {
+    display: none;
+  }
+
+  tbody,
+  tr,
+  td {
+    display: block;
+  }
+
+  tr {
+    padding: var(--ui-space-3) var(--ui-space-4);
+    border-bottom: 1px solid var(--ui-hairline);
+
+    &:last-child {
+      border-bottom: 0;
+    }
+  }
+
+  td {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--ui-space-4);
+    height: auto;
+    padding: var(--ui-space-1) 0;
+    border: 0;
+    text-align: end;
+
+    &::before {
+      content: attr(data-label);
+      flex: none;
+      color: var(--ui-muted);
+      font-size: var(--ui-text-xs);
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    &.main {
+      font-size: var(--ui-text-md);
+      font-weight: 600;
+    }
+  }
+}

@@ -1,0 +1,100 @@
+@use 'mixins' as *;
+
+.form-section {
+  display: grid;
+  gap: var(--ui-space-4);
+  padding: var(--ui-space-5);
+  border-bottom: 1px solid var(--ui-hairline);
+
+  @include below(mobile) {
+    padding: var(--ui-space-4);
+  }
+}
+
+.fields {
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  align-items: end;
+
+  .enabled {
+    grid-column: 1 / -1;
+  }
+
+  @include below(tablet) {
+    grid-template-columns: 1fr 1fr;
+
+    .name {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @include below(compact) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.section-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-3);
+
+  input[type='search'] {
+    width: 220px;
+    margin-inline-start: auto;
+
+    @include below(mobile) {
+      width: 100%;
+    }
+  }
+
+  .segmented {
+    margin-inline-start: auto;
+
+    @include below(mobile) {
+      width: 100%;
+      margin-inline-start: 0;
+    }
+  }
+}
+
+.check-list {
+  @include scrollbar;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0 var(--ui-space-4);
+  max-height: 280px;
+  overflow-y: auto;
+  padding: var(--ui-space-1) var(--ui-space-3);
+  border: 1px solid var(--ui-hairline);
+  border-radius: var(--ui-radius-md);
+}
+
+.form-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--ui-space-2);
+  padding: var(--ui-space-4) var(--ui-space-5);
+  border-radius: 0 0 var(--ui-radius-lg) var(--ui-radius-lg);
+  background: var(--ui-page);
+
+  @include below(mobile) {
+    padding: var(--ui-space-4);
+
+    button {
+      flex: 1;
+    }
+  }
+}
+
+td.actions {
+  text-align: end;
+  white-space: nowrap;
+
+  button + button {
+    margin-inline-start: var(--ui-space-1);
+  }
+
+  @include below(mobile) {
+    justify-content: flex-end;
+  }
+}

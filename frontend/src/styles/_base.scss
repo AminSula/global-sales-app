@@ -1,0 +1,677 @@
+@use 'mixins' as *;
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  // No grey/blue flash when something is tapped on a phone.
+  -webkit-tap-highlight-color: transparent;
+}
+
+// No browser outline after a click or tap. Keyboard users still get the accent
+// focus ring that buttons, links and inputs define with :focus-visible.
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ui-accent);
+  outline-offset: 2px;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ui-page);
+  color: var(--ui-text);
+  font-family: var(--ui-font);
+  font-size: var(--ui-text-sm);
+  font-weight: 400;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: var(--ui-text-xl);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+h2 {
+  font-size: var(--ui-text-lg);
+  font-weight: 600;
+}
+
+h3 {
+  font-size: var(--ui-text-md);
+  font-weight: 600;
+}
+
+.eyebrow {
+  color: var(--ui-secondary);
+  font-size: var(--ui-text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.secondary-text {
+  color: var(--ui-secondary);
+}
+
+// ---------- Buttons ----------
+
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ui-space-2);
+  min-height: var(--ui-control);
+  padding: 0 var(--ui-space-4);
+  border: 1px solid var(--ui-border-strong);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color var(--ui-motion),
+    border-color var(--ui-motion),
+    box-shadow var(--ui-motion),
+    transform var(--ui-motion);
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ui-accent);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background: var(--ui-page);
+    }
+  }
+}
+
+// A link that looks like a button: <a class="button"> or <a class="button primary">
+a.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--ui-control);
+  padding: 0 var(--ui-space-4);
+  border: 1px solid var(--ui-border-strong);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  font-weight: 600;
+  text-decoration: none;
+
+  &.primary {
+    border-color: transparent;
+    background: var(--ui-accent);
+    color: var(--ui-on-accent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ui-accent);
+    outline-offset: 2px;
+  }
+}
+
+button.primary {
+  border-color: transparent;
+  background: var(--ui-accent);
+  color: var(--ui-on-accent);
+
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background: var(--ui-accent-hover);
+      transform: translateY(-1px);
+    }
+  }
+}
+
+button.text-button {
+  border-color: transparent;
+  background: transparent;
+
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background: var(--ui-accent-soft);
+      text-decoration: underline;
+    }
+  }
+}
+
+button.danger-button {
+  border-color: transparent;
+  background: var(--ui-danger-solid);
+  color: var(--ui-surface);
+}
+
+button.icon-button {
+  width: var(--ui-control);
+  padding: 0;
+  border-color: var(--ui-hairline);
+}
+
+// ---------- Inputs ----------
+
+label.field {
+  display: grid;
+  gap: var(--ui-space-2);
+  font-weight: 500;
+}
+
+input:not([type='checkbox'], [type='radio']),
+select,
+textarea {
+  width: 100%;
+  min-height: var(--ui-control);
+  padding: 0 var(--ui-space-3);
+  border: 1px solid var(--ui-border-strong);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  font: inherit;
+  transition:
+    border-color var(--ui-motion),
+    box-shadow var(--ui-motion);
+
+  &::placeholder {
+    color: var(--ui-muted);
+  }
+
+  &:focus {
+    border-color: var(--ui-accent);
+    box-shadow: 0 0 0 3px var(--ui-accent-soft);
+    outline: none;
+  }
+
+  // iOS zooms the page when an input under 16px gets focus.
+  @include below(mobile) {
+    font-size: var(--ui-text-md);
+  }
+}
+
+input[type='checkbox'],
+input[type='radio'] {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--ui-accent);
+}
+
+// A checkbox with a two-line label: <label class="check"><input type="checkbox"><span><strong/><small/></span></label>
+label.check {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-3);
+  min-height: 48px;
+  cursor: pointer;
+
+  span {
+    display: grid;
+    min-width: 0;
+  }
+
+  strong {
+    font-weight: 500;
+  }
+
+  small {
+    color: var(--ui-secondary);
+    font-size: var(--ui-text-xs);
+  }
+}
+
+// ---------- Segmented toggle ----------
+
+.segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--ui-radius-pill);
+  background: var(--ui-track);
+  // Too many options for the width? Scroll sideways instead of wrapping.
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  button {
+    flex: 1 0 auto;
+    min-height: calc(var(--ui-control) - 6px);
+    border: 0;
+    border-radius: var(--ui-radius-pill);
+    background: transparent;
+    color: var(--ui-secondary);
+    font-weight: 500;
+    white-space: nowrap;
+
+    transition: background-color var(--ui-motion), color var(--ui-motion), box-shadow var(--ui-motion);
+
+    &.active {
+      background: var(--ui-surface);
+      color: var(--ui-text);
+      font-weight: 600;
+      box-shadow: var(--ui-shadow-sm);
+    }
+  }
+}
+
+button.small {
+  min-height: 36px;
+  padding: 0 var(--ui-space-3);
+
+  &.icon-button {
+    width: 36px;
+    padding: 0;
+  }
+}
+
+// ---------- Cards ----------
+
+.card {
+  @include surface;
+}
+
+.card-pad {
+  padding: var(--ui-space-5);
+
+  @include below(mobile) {
+    padding: var(--ui-space-4);
+  }
+}
+
+.card-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ui-space-4);
+  padding: var(--ui-space-5);
+  border-bottom: 1px solid var(--ui-hairline);
+
+  @include below(mobile) {
+    padding: var(--ui-space-4);
+  }
+}
+
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2);
+
+  input[type='search'] {
+    width: 220px;
+  }
+
+  input[type='date'] {
+    width: 170px;
+  }
+
+  @include below(mobile) {
+    width: 100%;
+
+    input[type='search'],
+    input[type='date'],
+    button {
+      flex: 1 1 100%;
+      width: 100%;
+    }
+  }
+}
+
+.card-alert {
+  margin: var(--ui-space-4) var(--ui-space-5);
+
+  @include below(mobile) {
+    margin: var(--ui-space-4);
+  }
+}
+
+.empty-state {
+  display: grid;
+  justify-items: center;
+  gap: var(--ui-space-3);
+  padding: var(--ui-space-7) var(--ui-space-5);
+  color: var(--ui-secondary);
+  text-align: center;
+}
+
+// ---------- Tables ----------
+
+.table-wrap {
+  overflow-x: auto;
+  @include scrollbar;
+}
+
+table.data {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 0 var(--ui-space-5);
+    text-align: start;
+  }
+
+  th {
+    height: 44px;
+    background: var(--ui-page);
+    color: var(--ui-muted);
+    font-size: var(--ui-text-xs);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  td {
+    height: 56px;
+    border-top: 1px solid var(--ui-hairline);
+  }
+
+  .num {
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .code {
+    color: var(--ui-secondary);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .main {
+    min-width: 180px;
+    font-weight: 500;
+  }
+
+  @media (hover: hover) {
+    tbody tr:hover {
+      background: var(--ui-row-hover);
+    }
+  }
+
+  @include below(mobile) {
+    @include stack-table;
+  }
+}
+
+// The last row follows the card's rounded corners.
+.card > .table-wrap:last-child {
+  border-radius: 0 0 var(--ui-radius-lg) var(--ui-radius-lg);
+}
+
+button.lang-toggle {
+  font-size: var(--ui-text-xs);
+  letter-spacing: 0.04em;
+}
+
+.spin {
+  animation: spin 900ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ---------- Badges ----------
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-1);
+  padding: 2px 10px;
+  border-radius: var(--ui-radius-pill);
+  background: var(--ui-track);
+  color: var(--ui-secondary);
+  font-size: var(--ui-text-xs);
+  font-weight: 500;
+  white-space: nowrap;
+
+  &.success {
+    background: var(--ui-success-soft);
+    color: var(--ui-success);
+  }
+
+  &.warning {
+    background: var(--ui-warning-soft);
+    color: var(--ui-warning);
+  }
+
+  &.danger {
+    background: var(--ui-danger-soft);
+    color: var(--ui-danger);
+  }
+
+  &.info {
+    background: var(--ui-info-soft);
+    color: var(--ui-info);
+  }
+}
+
+// ---------- Alerts ----------
+
+.alert {
+  padding: var(--ui-space-3) var(--ui-space-4);
+  border: 1px solid var(--ui-hairline);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-info-soft);
+  color: var(--ui-info);
+
+  &.error {
+    border-color: color-mix(in srgb, var(--ui-danger-solid) 20%, transparent);
+    background: var(--ui-danger-soft);
+    color: var(--ui-danger);
+  }
+
+  &.success {
+    border-color: color-mix(in srgb, var(--ui-success-solid) 20%, transparent);
+    background: var(--ui-success-soft);
+    color: var(--ui-success);
+  }
+
+  &.warning {
+    border-color: color-mix(in srgb, var(--ui-warning-solid) 20%, transparent);
+    background: var(--ui-warning-soft);
+    color: var(--ui-warning);
+  }
+}
+
+// ---------- Stat tiles (Overview, Reports) ----------
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(205px, 1fr));
+  gap: var(--ui-space-4);
+}
+
+.stat {
+  @include surface;
+  display: grid;
+  align-content: start;
+  gap: var(--ui-space-1);
+  padding: var(--ui-space-5);
+  color: inherit;
+  text-decoration: none;
+
+  @include below(mobile) {
+    padding: var(--ui-space-4);
+  }
+
+  .chip {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    margin-bottom: var(--ui-space-2);
+    border-radius: var(--ui-radius-md);
+    background: var(--ui-accent-soft);
+    color: var(--ui-text);
+  }
+
+  .label {
+    color: var(--ui-secondary);
+    font-weight: 500;
+  }
+
+  .value {
+    font-size: var(--ui-text-xl);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+  }
+
+  .caption {
+    color: var(--ui-muted);
+    font-size: var(--ui-text-xs);
+  }
+}
+
+// A stat tile that is a link.
+a.stat {
+  @include hover-lift;
+}
+
+// Thin progress bar: <span class="meter"><i [style.width.%]="..."></i></span>
+.meter {
+  display: block;
+  width: 64px;
+  height: 6px;
+  border-radius: var(--ui-radius-pill);
+  background: var(--ui-track);
+  overflow: hidden;
+
+  i {
+    display: block;
+    height: 100%;
+    border-radius: var(--ui-radius-pill);
+    background: var(--ui-chart);
+    transform-origin: left;
+    animation: grow-x 600ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    transition: width 300ms ease-out;
+  }
+}
+
+// ---------- Motion ----------
+// Short and quiet: things arrive, they do not perform. All of it is switched off
+// by the reduced-motion rule at the end of this file.
+
+// Every page fades and rises slightly when it opens.
+router-outlet + * {
+  display: block;
+  animation: page-in 240ms ease-out both;
+}
+
+// Children appear one after another: put class="stagger" on the list, tbody or grid.
+.stagger > * {
+  animation: rise 280ms ease-out both;
+
+  @for $i from 1 through 12 {
+    &:nth-child(#{$i}) {
+      animation-delay: #{($i - 1) * 30}ms;
+    }
+  }
+}
+
+.alert {
+  animation: rise 220ms ease-out both;
+}
+
+// An icon or label that was just swapped (theme and language buttons).
+.swap {
+  display: inline-flex;
+  animation: swap-in 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+// Theme and language changes cross-fade (see core/smooth.ts).
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 380ms;
+  animation-timing-function: ease-in-out;
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes swap-in {
+  from {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.5);
+  }
+}
+
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes grow-y {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

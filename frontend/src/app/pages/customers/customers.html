@@ -1,0 +1,85 @@
+<app-page-intro
+  [eyebrow]="t('customers.eyebrow')"
+  [title]="t('customers.title')"
+  [description]="t('customers.intro')"
+/>
+
+<section class="card">
+  <header class="card-heading">
+    <div>
+      <h2>{{ t('customers.count', { count: customers().length }) }}</h2>
+      <p class="secondary-text">
+        {{
+          loading() && !customers().length
+            ? t('common.loading')
+            : lastSynced()
+              ? t('sync.last', { when: i18n.dateTime(lastSynced()!) })
+              : t('sync.never')
+        }}
+      </p>
+    </div>
+    <div class="card-actions">
+      <input
+        type="search"
+        [ngModel]="query()"
+        (ngModelChange)="query.set($event)"
+        [placeholder]="t('common.search')"
+        [attr.aria-label]="t('common.search')"
+      />
+      <button type="button" class="primary" (click)="refresh()" [disabled]="syncing()">
+        <app-icon name="refresh" [size]="18" [class.spin]="syncing()" />
+        {{ syncing() ? t('sync.running') : t('sync.button') }}
+      </button>
+    </div>
+  </header>
+
+  @if (syncFailed()) {
+    <p class="alert error card-alert" role="alert">{{ t('sync.failed') }}</p>
+  }
+  @if (syncResult(); as result) {
+    <p class="alert success card-alert" role="status">
+      {{
+        t('customers.synced', {
+          total: result.customers,
+          created: result.customersNew,
+          changed: result.customersChanged,
+          removed: result.customersRemoved,
+        })
+      }}
+    </p>
+  }
+
+  @if (loading() && !customers().length) {
+    <app-skeleton />
+  } @else if (loadFailed()) {
+    <div class="empty-state">
+      <p>{{ t('common.loadFailed') }}</p>
+      <button type="button" (click)="load()">{{ t('common.retry') }}</button>
+    </div>
+  } @else if (!customers().length) {
+    <p class="empty-state">{{ t('sync.empty') }}</p>
+  } @else if (!filtered().length) {
+    <p class="empty-state">{{ t('common.noResults') }}</p>
+  } @else {
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr>
+            <th>{{ t('customers.code') }}</th>
+            <th>{{ t('customers.name') }}</th>
+            <th>{{ t('customers.address') }}</th>
+          </tr>
+        </thead>
+        <tbody class="stagger">
+          @for (customer of filtered(); track customer.id) {
+            <tr>
+              <td class="code" [attr.data-label]="t('customers.code')">{{ customer.code }}</td>
+              <td class="main" [attr.data-label]="t('customers.name')">{{ customer.name }}</td>
+              <td [attr.data-label]="t('customers.address')">{{ customer.address || '—' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

@@ -1,0 +1,149 @@
+<app-page-intro
+  [eyebrow]="i18n.date(today)"
+  [title]="t('home.welcome', { name: auth.user()?.fullName ?? '' })"
+  [description]="t('overview.intro')"
+/>
+
+@if (loadFailed()) {
+  <section class="card empty-state">
+    <p>{{ t('common.loadFailed') }}</p>
+    <button type="button" (click)="load()">{{ t('common.retry') }}</button>
+  </section>
+} @else if (!data()) {
+  <app-skeleton [rows]="4" cards />
+} @else {
+  @let d = data()!;
+
+  <!-- ---------- Today's numbers (each tile opens the page behind it) ---------- -->
+  <div class="stats stagger">
+    <a class="stat" routerLink="/admin/orders">
+      <span class="chip"><app-icon name="clipboard" /></span>
+      <p class="label">{{ t('overview.ordersToday') }}</p>
+      <p class="value" [appCountUp]="d.ordersToday"></p>
+      <p class="caption">{{ t('reports.average', { value: i18n.money(d.averageToday) }) }}</p>
+    </a>
+    <a class="stat" routerLink="/admin/reports">
+      <span class="chip"><app-icon name="chart" /></span>
+      <p class="label">{{ t('overview.valueToday') }}</p>
+      <p class="value" [appCountUp]="d.valueToday" format="money"></p>
+      <p class="caption">{{ t('overview.valueCaption') }}</p>
+    </a>
+    <a class="stat" routerLink="/admin/orders">
+      <span class="chip"><app-icon name="check" /></span>
+      <p class="label">{{ t('overview.pending') }}</p>
+      <p class="value" [appCountUp]="d.pendingOrders"></p>
+      <p class="caption">{{ t('reports.pendingValue', { value: i18n.money(d.pendingValue) }) }}</p>
+    </a>
+    <a class="stat" routerLink="/admin/assignments">
+      <span class="chip"><app-icon name="calendar" /></span>
+      <p class="label">{{ t('overview.visits') }}</p>
+      <p class="value">
+        <span [appCountUp]="d.visitsOrdered"></span>
+        <small>/ {{ d.visitsAssigned }}</small>
+      </p>
+      <p class="caption">{{ t('overview.visitsCaption') }}</p>
+    </a>
+  </div>
+
+  <div class="panels">
+    <!-- ---------- Waiting for approval ---------- -->
+    <section class="card">
+      <header class="card-heading">
+        <h2>{{ t('overview.pending') }}</h2>
+        <a class="button small-link" routerLink="/admin/orders">{{ t('overview.seeAll') }}</a>
+      </header>
+
+      @if (!d.pending.length) {
+        <p class="empty-state">{{ t('overview.pendingEmpty') }}</p>
+      } @else {
+        <ul class="rows stagger">
+          @for (order of d.pending; track order.id) {
+            <li>
+              <a [routerLink]="['/admin/orders']" [queryParams]="{ open: order.id }">
+                <span class="who">
+                  <strong>{{ order.customerName }}</strong>
+                  <small>{{ order.orderNumber }} · {{ order.agentName }} · {{ i18n.dateTime(order.createdAt) }}</small>
+                </span>
+                <b>{{ i18n.money(order.total) }}</b>
+                <app-icon name="chevron" [size]="18" />
+              </a>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <!-- ---------- Today by agent ---------- -->
+    <section class="card">
+      <header class="card-heading">
+        <h2>{{ t('overview.byAgent') }}</h2>
+      </header>
+
+      <ul class="rows stagger">
+        @for (agent of d.agents; track agent.agentName) {
+          <li>
+            <div class="agent">
+              <span class="who">
+                <strong>{{ agent.agentName }}</strong>
+                <small>
+                  @if (agent.customersAssigned) {
+                    {{ t('overview.agentVisits', { ordered: agent.customersOrdered, assigned: agent.customersAssigned }) }}
+                  } @else {
+                    {{ t('overview.noVisits') }}
+                  }
+                </small>
+                <span class="meter wide" aria-hidden="true">
+                  <i [style.width.%]="percent(agent.customersOrdered, agent.customersAssigned)"></i>
+                </span>
+              </span>
+              <span class="figures">
+                <b>{{ i18n.money(agent.value) }}</b>
+                <small>{{ t('orders.count', { count: agent.orders }) }}</small>
+              </span>
+            </div>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <!-- ---------- Data ---------- -->
+    <section class="card data-card">
+      <header class="card-heading">
+        <div>
+          <h2>{{ t('overview.data') }}</h2>
+          <p class="secondary-text">
+            {{ d.lastSyncedAt ? t('sync.last', { when: i18n.dateTime(d.lastSyncedAt) }) : t('sync.never') }}
+          </p>
+        </div>
+        <button type="button" class="primary" (click)="refreshData()" [disabled]="syncing()">
+          <app-icon name="refresh" [size]="18" [class.spin]="syncing()" />
+          {{ syncing() ? t('sync.running') : t('sync.button') }}
+        </button>
+      </header>
+
+      @switch (syncNotice()) {
+        @case ('done') {
+          <p class="alert success card-alert" role="status">{{ t('overview.synced') }}</p>
+        }
+        @case ('failed') {
+          <p class="alert error card-alert" role="alert">{{ t('sync.failed') }}</p>
+        }
+      }
+
+      <div class="facts">
+        <a routerLink="/admin/products">
+          <b [appCountUp]="d.products"></b>
+          <span>{{ t('nav.products') }}</span>
+        </a>
+        <a routerLink="/admin/customers">
+          <b [appCountUp]="d.customers"></b>
+          <span>{{ t('nav.customers') }}</span>
+        </a>
+        <a routerLink="/admin/offers">
+          <b [appCountUp]="d.activeOffers"></b>
+          <span>{{ t('overview.activeOffers') }}</span>
+        </a>
+      </div>
+    </section>
+  </div>
+}

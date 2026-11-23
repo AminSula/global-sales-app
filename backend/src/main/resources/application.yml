@@ -1,0 +1,21 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/sales_pilot}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+  jpa:
+    open-in-view: false
+    hibernate:
+      # Tables are created only by the SQL scripts in db/migration; Hibernate just checks them.
+      ddl-auto: validate
+  flyway:
+    enabled: true
+
+app:
+  jwt:
+    # Must be at least 32 characters. Set JWT_SECRET to a private value outside your own machine.
+    secret: ${JWT_SECRET:dev-only-secret-change-me-before-deploying-0123456789}
+    expiration-hours: 12
